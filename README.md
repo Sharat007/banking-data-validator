@@ -20,12 +20,14 @@ A configurable CSV data validation API for banking data quality checks, built wi
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd banking-data-validator
 ```
 
 2. Create and activate virtual environment:
+
 ```bash
 python -m venv venv
 source venv/Scripts/activate  # On Windows
@@ -33,6 +35,7 @@ source venv/Scripts/activate  # On Windows
 ```
 
 3. Install dependencies (including dev tools):
+
 ```bash
 pip install -e ".[dev]"
 ```
@@ -40,6 +43,7 @@ pip install -e ".[dev]"
 ## Running the Application
 
 Start the development server:
+
 ```bash
 uvicorn app.main:app --reload
 ```
@@ -124,11 +128,66 @@ banking-data-validator/
 ## API Endpoints
 
 ### Health Check
+
 - **GET** `/health`
   - Returns service status
   - Response: `{"status": "healthy", "service": "banking-data-validator", "timestamp": "..."}`
 
 ### Validate CSV
+
+- **POST** `/validate`
+  - Upload a CSV file for validation
+  - Validates: required fields, account number format, date format, numeric amounts, currency codes
+
+```bash
+curl -X POST http://localhost:8000/validate -F "file=@sample_data.csv"
+```
+
+Response:
+
+```json
+{
+  "file": "sample_data.csv",
+  "total_rows": 7,
+  "errors_found": 5,
+  "valid": false,
+  "errors": [
+    {
+      "row": 3,
+      "column": "account_number",
+      "message": "Invalid format: 'INVALID' (expected 8-12 digits)",
+      "severity": "error"
+    },
+    {
+      "row": 4,
+      "column": "transaction_date",
+      "message": "Invalid date format: '15-01-2024' (expected YYYY-MM-DD)",
+      "severity": "error"
+    },
+    {
+      "row": 5,
+      "column": "amount",
+      "message": "Required field 'amount' is empty",
+      "severity": "error"
+    },
+    {
+      "row": 6,
+      "column": "amount",
+      "message": "Not a valid number: 'not_a_number'",
+      "severity": "error"
+    },
+    {
+      "row": 7,
+      "column": "currency",
+      "message": "Invalid currency code: 'us' (expected 3-letter ISO like USD, EUR)",
+      "severity": "warning"
+    }
+  ]
+}
+```
+
+### Validate CSV
+
 - **POST** `/validate`
   - Upload a CSV file for validation
   - Accepts: multipart form with a `.csv` file
@@ -146,7 +205,12 @@ banking-data-validator/
       "errors_found": 2,
       "valid": false,
       "errors": [
-        {"row": 3, "column": "account_number", "message": "...", "severity": "error"}
+        {
+          "row": 3,
+          "column": "account_number",
+          "message": "...",
+          "severity": "error"
+        }
       ]
     }
     ```
