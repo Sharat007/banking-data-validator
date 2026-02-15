@@ -5,6 +5,7 @@ returns a list of error dicts (empty if valid).
 """
 
 import re
+from datetime import datetime
 from typing import Any
 
 
@@ -32,11 +33,13 @@ def _error(row: int, column: str, message: str, severity: str = "error") -> dict
 
 
 def check_required_fields(row: dict, idx: int) -> list[dict]:
-    """Ensure critical fields are not empty."""
+    """Ensure critical fields are present and not empty."""
     required = ["account_number", "transaction_date", "amount"]
     errors: list[dict] = []
     for field in required:
-        if field in row and (row[field] is None or str(row[field]).strip() == ""):
+        if field not in row:
+            errors.append(_error(idx, field, f"Required field '{field}' is missing"))
+        elif row[field] is None or str(row[field]).strip() == "":
             errors.append(_error(idx, field, f"Required field '{field}' is empty"))
     return errors
 
@@ -71,7 +74,7 @@ def check_amount_is_numeric(row: dict, idx: int) -> list[dict]:
 
 
 def check_transaction_date_format(row: dict, idx: int) -> list[dict]:
-    """Transaction date should be YYYY-MM-DD."""
+    """Transaction date should be a valid YYYY-MM-DD date."""
     val = row.get("transaction_date", "")
     if not val or str(val).strip() == "":
         return []
@@ -82,6 +85,16 @@ def check_transaction_date_format(row: dict, idx: int) -> list[dict]:
                 idx,
                 "transaction_date",
                 f"Invalid date format: '{val}' (expected YYYY-MM-DD)",
+            )
+        ]
+    try:
+        datetime.strptime(val, "%Y-%m-%d")
+    except ValueError:
+        return [
+            _error(
+                idx,
+                "transaction_date",
+                f"Invalid date: '{val}' is not a real calendar date",
             )
         ]
     return []

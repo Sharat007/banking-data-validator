@@ -41,7 +41,7 @@ pip install -e ".[dev]"
 
 Start the development server:
 ```bash
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 ```
 
 The API will be available at `http://localhost:8000`
@@ -79,7 +79,7 @@ pytest tests/test_main.py::test_health_check_returns_200
 ### Type Checking
 
 ```bash
-mypy main.py
+mypy app/
 ```
 
 ### Linting
@@ -106,14 +106,19 @@ black --check .
 
 ```
 banking-data-validator/
-├── main.py                 # FastAPI application
-├── tests/                  # Test directory
+├── app/                      # Application package
 │   ├── __init__.py
-│   ├── conftest.py        # Pytest fixtures
-│   └── test_main.py       # Main app tests
-├── pyproject.toml         # Project configuration
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
+│   ├── main.py               # FastAPI application & Pydantic models
+│   └── validators.py         # Validation rules engine
+├── tests/                    # Test directory
+│   ├── __init__.py
+│   ├── conftest.py           # Pytest fixtures
+│   ├── test_main.py          # Health endpoint tests
+│   └── test_validate.py      # Validation endpoint tests
+├── sample_data.csv           # Example CSV with valid & invalid rows
+├── pyproject.toml            # Project configuration
+├── .gitignore                # Git ignore rules
+└── README.md                 # This file
 ```
 
 ## API Endpoints
@@ -121,23 +126,36 @@ banking-data-validator/
 ### Health Check
 - **GET** `/health`
   - Returns service status
-  - Response: `{"status": "healthy", "service": "banking-data-validator"}`
+  - Response: `{"status": "healthy", "service": "banking-data-validator", "timestamp": "..."}`
 
-## Python Best Practices
-
-This project follows the Zen of Python:
-
-- ✅ Explicit is better than implicit (type annotations)
-- ✅ Simple is better than complex
-- ✅ Readability counts (docstrings, clear naming)
-- ✅ Errors should never pass silently (proper error handling)
-- ✅ Testing is essential (TDD approach)
+### Validate CSV
+- **POST** `/validate`
+  - Upload a CSV file for validation
+  - Accepts: multipart form with a `.csv` file
+  - Validation rules:
+    - Required fields: `account_number`, `transaction_date`, `amount`
+    - Account number: 8-12 digits
+    - Transaction date: valid `YYYY-MM-DD` date
+    - Amount: numeric value
+    - Currency: 3-letter ISO code (optional, warning severity)
+  - Response:
+    ```json
+    {
+      "file": "data.csv",
+      "total_rows": 5,
+      "errors_found": 2,
+      "valid": false,
+      "errors": [
+        {"row": 3, "column": "account_number", "message": "...", "severity": "error"}
+      ]
+    }
+    ```
 
 ## Contributing
 
 1. Write tests first (TDD)
 2. Ensure all tests pass: `pytest`
-3. Check type annotations: `mypy main.py`
+3. Check type annotations: `mypy app/`
 4. Format code: `black .`
 5. Lint code: `ruff check .`
 6. Commit changes

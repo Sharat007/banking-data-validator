@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.validators import validate_rows
 
@@ -19,17 +20,38 @@ app = FastAPI(
 )
 
 
-@app.get("/health")
-def health_check() -> dict:
+class ValidationError(BaseModel):
+    row: int
+    column: str
+    message: str
+    severity: str = "error"
+
+
+class ValidationReport(BaseModel):
+    file: str
+    total_rows: int
+    errors_found: int
+    valid: bool
+    errors: list[ValidationError]
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    timestamp: str
+
+
+@app.get("/health", response_model=HealthResponse)
+def health_check() -> HealthResponse:
     """Return service health status."""
-    return {
-        "status": "healthy",
-        "service": "banking-data-validator",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    }
+    return HealthResponse(
+        status="healthy",
+        service="banking-data-validator",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
 
 
-@app.post("/validate", response_model=None)
+@app.post("/validate", response_model=ValidationReport)
 async def validate_csv(file: UploadFile = File(...)):
     """Upload a CSV file and validate it against banking data rules.
 
@@ -62,10 +84,10 @@ async def validate_csv(file: UploadFile = File(...)):
 
     errors = validate_rows(rows)
 
-    return {
-        "file": file.filename,
-        "total_rows": len(rows),
-        "errors_found": len(errors),
-        "valid": len(errors) == 0,
-        "errors": errors,
-    }
+    return ValidationReport(
+        file=file.filename,
+        total_rows=len(rows),
+        errors_found=len(errors),
+        valid=len(errors) == 0,
+        errors=[ValidationError(**e) for e in errors],
+    )
