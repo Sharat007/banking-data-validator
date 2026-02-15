@@ -144,6 +144,5 @@ cython_debug/
 .DS_Store
 
 # Project-specific
-*.csv
 data/
 logs/
