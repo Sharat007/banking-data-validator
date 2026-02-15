@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Sharat007", email = "sharat.nundoo@gmail.com"}
 ]
 keywords = ["banking", "data-validation", "csv", "fastapi"]
 classifiers = [
@@ -28,6 +28,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "pandas>=2.0.0",
     "numpy>=1.24.0",
+    "python-multipart>=0.0.9"
 ]
 
 [project.optional-dependencies]
@@ -118,3 +119,6 @@ strict_equality = true
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_untyped_defs = false
+
+[tool.setuptools]
+packages = ["app"]

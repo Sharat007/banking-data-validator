@@ -24,7 +24,8 @@ def test_health_check_response_structure(client: TestClient) -> None:
 
     assert "status" in data
     assert "service" in data
-    assert len(data) == 2
+    assert "timestamp" in data
+    assert len(data) == 3
 
 
 def test_health_check_response_values(client: TestClient) -> None:
@@ -41,7 +42,11 @@ def test_health_check_idempotency(client: TestClient) -> None:
     response1 = client.get("/health")
     response2 = client.get("/health")
 
-    assert response1.json() == response2.json()
+    r1 = response1.json()
+    r2 = response2.json()
+    assert r1["status"] == r2["status"]
+    assert r1["service"] == r2["service"]
+    assert r2["timestamp"] >= r1["timestamp"]
     assert response1.status_code == response2.status_code
 
 
