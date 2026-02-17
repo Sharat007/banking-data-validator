@@ -54,30 +54,25 @@ def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict]:
     """Check for duplicate transactions based on account_number, date, and amount."""
     seen = collections.Counter()
     errors: list[dict] = []
-
-    keys = [
-        (
+    for idx, row in enumerate(rows, start=1):
+        key = (
             str(row.get("account_number", "")).strip(),
             str(row.get("transaction_date", "")).strip(),
             str(row.get("amount", "")).strip(),
             str(row.get("currency", "")).strip(),
         )
-        for row in rows
-    ]
-    counts = collections.Counter(keys)
-
-    for key, count in counts.items():
-        if count > 1:
+        seen[key] += 1
+        if seen[key] > 1:
             errors.append(
                 _error(
-                    row=0,
-                    column="duplicate_check",
-                    message=f"Duplicate transaction detected: {key}",
+                    idx,
+                    "duplicate_check",
+                    f"Duplicate transaction detected: {key}",
                     severity="warning",
                 )
             )
 
-    return []
+    return errors
 
 
 def check_account_number_format(row: dict, idx: int) -> list[dict]:

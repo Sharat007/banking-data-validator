@@ -4,6 +4,8 @@ import io
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import client
+
 
 def _upload_csv(client: TestClient, content: str, filename: str = "test.csv"):
     """Helper to upload CSV content to the validate endpoint."""
@@ -143,3 +145,15 @@ class TestValidateEndpoint:
         assert data["valid"] is True
         assert data["errors_found"] == 0
         assert data["total_rows"] == 2
+        
+    def test_csv_multiple_duplicate_transactions(self, client: TestClient):
+        csv = (
+            "account_number,transaction_date,amount,currency\n"
+            "12345678,2024-01-15,100.50,USD\n"
+            "12345678,2024-01-15,100.50,USD\n"
+            "12345678,2024-01-15,100.50,USD\n"
+        )
+        resp = _upload_csv(client, csv)
+        data = resp.json()
+        dup_errors = [e for e in data["errors"] if "Duplicate" in e["message"]]
+        assert len(dup_errors) == 2  # rows 2 and 3
