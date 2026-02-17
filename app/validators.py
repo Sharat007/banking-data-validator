@@ -53,23 +53,29 @@ def check_required_fields(row: dict, idx: int) -> list[dict]:
 def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict]:
     """Check for duplicate transactions based on account_number, date, and amount."""
     seen = collections.Counter()
-    for idx, row in enumerate(rows, start=1):
-        key = (
+    errors: list[dict] = []
+
+    keys = [
+        (
             str(row.get("account_number", "")).strip(),
             str(row.get("transaction_date", "")).strip(),
             str(row.get("amount", "")).strip(),
             str(row.get("currency", "")).strip(),
         )
-        seen[key] += 1
-        if seen[key] > 1:
-            return [
+        for row in rows
+    ]
+    counts = collections.Counter(keys)
+
+    for key, count in counts.items():
+        if count > 1:
+            errors.append(
                 _error(
-                    idx,
-                    "duplicate_check",
-                    f"Duplicate transaction detected: {key}",
+                    row=0,
+                    column="duplicate_check",
+                    message=f"Duplicate transaction detected: {key}",
                     severity="warning",
                 )
-            ]
+            )
 
     return []
 
