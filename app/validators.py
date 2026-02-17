@@ -25,7 +25,9 @@ def validate_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return all_errors
 
 
-def _error(row: int, column: str, message: str, severity: str = "error") -> dict[str, Any]:
+def _error(
+    row: int, column: str, message: str, severity: str = "error"
+) -> dict[str, Any]:
     """Create a standardized error dict."""
     return {
         "row": row,
@@ -104,7 +106,9 @@ def check_amount_is_numeric(row: dict[str, Any], idx: int) -> list[dict[str, Any
     return []
 
 
-def check_transaction_date_format(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
+def check_transaction_date_format(
+    row: dict[str, Any], idx: int
+) -> list[dict[str, Any]]:
     """Transaction date should be a valid YYYY-MM-DD date."""
     val = row.get("transaction_date", "")
     if not val or str(val).strip() == "":
