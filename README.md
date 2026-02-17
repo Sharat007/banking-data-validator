@@ -186,35 +186,6 @@ Response:
 }
 ```
 
-### Validate CSV
-
-- **POST** `/validate`
-  - Upload a CSV file for validation
-  - Accepts: multipart form with a `.csv` file
-  - Validation rules:
-    - Required fields: `account_number`, `transaction_date`, `amount`
-    - Account number: 8-12 digits
-    - Transaction date: valid `YYYY-MM-DD` date
-    - Amount: numeric value
-    - Currency: 3-letter ISO code (optional, warning severity)
-  - Response:
-    ```json
-    {
-      "file": "data.csv",
-      "total_rows": 5,
-      "errors_found": 2,
-      "valid": false,
-      "errors": [
-        {
-          "row": 3,
-          "column": "account_number",
-          "message": "...",
-          "severity": "error"
-        }
-      ]
-    }
-    ```
-
 ## Contributing
 
 1. Write tests first (TDD)
