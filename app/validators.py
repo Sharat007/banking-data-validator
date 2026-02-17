@@ -58,6 +58,7 @@ def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict]:
             str(row.get("account_number", "")).strip(),
             str(row.get("transaction_date", "")).strip(),
             str(row.get("amount", "")).strip(),
+            str(row.get("currency", "")).strip(),
         )
         seen[key] += 1
         if seen[key] > 1:

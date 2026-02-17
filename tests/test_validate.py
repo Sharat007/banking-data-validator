@@ -117,3 +117,29 @@ class TestValidateEndpoint:
             e["column"] == "transaction_date" and "not a real" in e["message"]
             for e in data["errors"]
         )
+
+    def test_csv_duplicate_transactions(self, client: TestClient):
+        csv = (
+            "account_number,transaction_date,amount,currency\n"
+            "12345678,2024-01-15,100.50,USD\n"
+            "12345678,2024-01-15,100.50,USD\n"
+        )
+        resp = _upload_csv(client, csv)
+        data = resp.json()
+        assert data["valid"] is False
+        assert any(
+            e["row"] == 2 and "Duplicate transaction detected" in e["message"]
+            for e in data["errors"]
+        )
+
+    def test_csv_unique_transactions(self, client: TestClient):
+        csv = (
+            "account_number,transaction_date,amount,currency\n"
+            "12345678,2024-01-15,100.50,USD\n"
+            "12345678,2024-01-15,101.50,USD\n"
+        )
+        resp = _upload_csv(client, csv)
+        data = resp.json()
+        assert data["valid"] is True
+        assert data["errors_found"] == 0
+        assert data["total_rows"] == 2
