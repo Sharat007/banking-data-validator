@@ -6,8 +6,9 @@ A configurable CSV data validation API for banking data quality checks.
 import csv
 import io
 from datetime import datetime, timezone
+from typing import Any
 
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -18,6 +19,8 @@ app = FastAPI(
     description="Validate banking CSV data against configurable rules",
     version="0.2.0",
 )
+
+_file_upload = File(...)
 
 
 class ValidationError(BaseModel):
@@ -52,7 +55,7 @@ def health_check() -> HealthResponse:
 
 
 @app.post("/validate", response_model=ValidationReport)
-async def validate_csv(file: UploadFile = File(...)):
+async def validate_csv(file: UploadFile = _file_upload) -> Any:
     """Upload a CSV file and validate it against banking data rules.
 
     Accepts a CSV file with columns like account_number, transaction_date,

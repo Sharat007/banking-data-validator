@@ -4,28 +4,28 @@ Each validator function takes a row dict and row index,
 returns a list of error dicts (empty if valid).
 """
 
+import collections
 import re
 from datetime import datetime
 from typing import Any
-import collections
 
 
-def validate_rows(rows: list[dict[str, Any]]) -> list[dict]:
+def validate_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Run all validation rules against every row."""
-    all_errors: list[dict] = []
+    all_errors: list[dict[str, Any]] = []
 
     # First run global rules that may need to analyze all rows (e.g. duplicates)
-    for rule in GLOBAL_RULES:
-        all_errors.extend(rule(rows))
+    for global_rule in GLOBAL_RULES:
+        all_errors.extend(global_rule(rows))
 
     for idx, row in enumerate(rows, start=1):
-        for rule in RULES:
-            errors = rule(row, idx)
+        for row_rule in RULES:
+            errors = row_rule(row, idx)
             all_errors.extend(errors)
     return all_errors
 
 
-def _error(row: int, column: str, message: str, severity: str = "error") -> dict:
+def _error(row: int, column: str, message: str, severity: str = "error") -> dict[str, Any]:
     """Create a standardized error dict."""
     return {
         "row": row,
@@ -38,10 +38,10 @@ def _error(row: int, column: str, message: str, severity: str = "error") -> dict
 # --- Individual validation rules ---
 
 
-def check_required_fields(row: dict, idx: int) -> list[dict]:
+def check_required_fields(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     """Ensure critical fields are present and not empty."""
     required = ["account_number", "transaction_date", "amount"]
-    errors: list[dict] = []
+    errors: list[dict[str, Any]] = []
     for field in required:
         if field not in row:
             errors.append(_error(idx, field, f"Required field '{field}' is missing"))
@@ -50,10 +50,10 @@ def check_required_fields(row: dict, idx: int) -> list[dict]:
     return errors
 
 
-def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict]:
+def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Check for duplicate transactions based on account_number, date, and amount."""
-    seen = collections.Counter()
-    errors: list[dict] = []
+    seen: collections.Counter[tuple[str, ...]] = collections.Counter()
+    errors: list[dict[str, Any]] = []
     for idx, row in enumerate(rows, start=1):
         key = (
             str(row.get("account_number", "")).strip(),
@@ -75,7 +75,7 @@ def check_duplicate_transactions(rows: list[dict[str, Any]]) -> list[dict]:
     return errors
 
 
-def check_account_number_format(row: dict, idx: int) -> list[dict]:
+def check_account_number_format(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     """Account numbers should be 8-12 digits."""
     val = row.get("account_number", "")
     if not val or str(val).strip() == "":
@@ -92,7 +92,7 @@ def check_account_number_format(row: dict, idx: int) -> list[dict]:
     return []
 
 
-def check_amount_is_numeric(row: dict, idx: int) -> list[dict]:
+def check_amount_is_numeric(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     """Amount must be a valid number."""
     val = row.get("amount", "")
     if not val or str(val).strip() == "":
@@ -104,7 +104,7 @@ def check_amount_is_numeric(row: dict, idx: int) -> list[dict]:
     return []
 
 
-def check_transaction_date_format(row: dict, idx: int) -> list[dict]:
+def check_transaction_date_format(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     """Transaction date should be a valid YYYY-MM-DD date."""
     val = row.get("transaction_date", "")
     if not val or str(val).strip() == "":
@@ -131,7 +131,7 @@ def check_transaction_date_format(row: dict, idx: int) -> list[dict]:
     return []
 
 
-def check_currency_code(row: dict, idx: int) -> list[dict]:
+def check_currency_code(row: dict[str, Any], idx: int) -> list[dict[str, Any]]:
     """Currency code should be a 3-letter ISO code if present."""
     val = row.get("currency", "")
     if not val or str(val).strip() == "":
